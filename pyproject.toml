@@ -1,0 +1,11 @@
+[project]
+name = "discord-self"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "discord-py-self[voice]",
+    "python-dotenv>=1.2.2"
+]
+
+[tool.uv.sources]
+discord-py-self = { git = "https://github.com/dolfies/discord.py-self" }
