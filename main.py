@@ -6,6 +6,7 @@ if os.getenv("IS_DOCKER") is None:
     load_dotenv()
 
 import discord
+from discord import utils
 
 class Client(discord.Client):
     def __init__(self, channel_id):
@@ -36,6 +37,7 @@ class Client(discord.Client):
 
 
 async def main():
+    utils.setup_logging()
     tasks = []
     tokens = os.environ
     for token in tokens:
