@@ -18,7 +18,7 @@ class Client(discord.Client):
         if channel is None:
             print(f'[{self.user.name}] Channel with ID {self.channel_id} not found.')
             return
-        await channel.connect(self_mute=True)
+        await channel.connect(self_mute=True, reconnect=False)
 
     async def on_ready(self):
         print(f'[{self.user.name}] Logged in as {self.user.name} ({self.user.id})')
