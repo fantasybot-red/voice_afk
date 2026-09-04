@@ -16,12 +16,12 @@ class Client(discord.Client):
     async def connect_voice(self):
         channel = self.get_channel(self.channel_id)
         if channel is None:
-            print(f'Channel with ID {self.channel_id} not found.')
+            print(f'[{self.user.name}] Channel with ID {self.channel_id} not found.')
             return
         await channel.connect(self_deaf=True, self_mute=True)
 
     async def on_ready(self):
-        print(f'Logged in as {self.user.name} ({self.user.id})')
+        print(f'[{self.user.name}] Logged in as {self.user.name} ({self.user.id})')
         print('------')
         await self.connect_voice()
 
@@ -30,9 +30,14 @@ class Client(discord.Client):
             return  # Ignore updates for the bot itself
 
         if after.channel is None:
+            await asyncio.sleep(1)
+            new_member = member.guild.get_member(self.user.id)
+            if new_member is not None and new_member.voice is not None and new_member.voice.channel is not None:
+                print(f"[{self.user.name}] Reconnected to voice channel.")
+                return
             if before.channel.guild.voice_client is not None:
                 await before.channel.guild.voice_client.disconnect(force=True)
-            print("Disconnected from voice channel. Attempting to reconnect...")
+            print(f"[{self.user.name}] Disconnected from voice channel. Attempting to reconnect...")
             await self.connect_voice()
 
 
