@@ -15,7 +15,7 @@ class Client(discord.Client):
         super().__init__()
 
     async def connect_voice(self):
-        await channel.connect(self_deaf=True, self_mute=True, reconnect=False)
+        await self.channel.connect(self_deaf=True, self_mute=True, reconnect=False)
 
     async def on_ready(self):
         print(f'[{self.user.name}] Logged in as {self.user.name} ({self.user.id})')
