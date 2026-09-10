@@ -21,7 +21,7 @@ class Client(discord.Client):
         print(f'[{self.user.name}] Logged in as {self.user.name} ({self.user.id})')
         print('------')
         self.channel = self.get_channel(self.channel_id)
-        if channel is None:
+        if self.channel is None:
             print(f'[{self.user.name}] Channel with ID {self.channel_id} not found.')
             return
         await self.connect_voice()
@@ -30,7 +30,7 @@ class Client(discord.Client):
         if member != self.user:
             return  # Ignore updates for the bot itself
 
-        if channel is None:
+        if self.channel is None:
             print(f'[{self.user.name}] Channel with ID {self.channel_id} not found.')
             return
         
