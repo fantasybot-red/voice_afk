@@ -11,24 +11,32 @@ from discord import utils
 class Client(discord.Client):
     def __init__(self, channel_id):
         self.channel_id = channel_id
+        self.channel = None
         super().__init__()
 
     async def connect_voice(self):
-        channel = self.get_channel(self.channel_id)
-        if channel is None:
-            print(f'[{self.user.name}] Channel with ID {self.channel_id} not found.')
-            return
-        await channel.connect(self_mute=True, reconnect=False)
+        await channel.connect(self_deaf=True, self_mute=True, reconnect=False)
 
     async def on_ready(self):
         print(f'[{self.user.name}] Logged in as {self.user.name} ({self.user.id})')
         print('------')
+        self.channel = self.get_channel(self.channel_id)
+        if channel is None:
+            print(f'[{self.user.name}] Channel with ID {self.channel_id} not found.')
+            return
         await self.connect_voice()
 
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         if member != self.user:
             return  # Ignore updates for the bot itself
 
+        if channel is None:
+            print(f'[{self.user.name}] Channel with ID {self.channel_id} not found.')
+            return
+        
+        if member.guild.id != self.channel.guild.id:
+            return # Pervent update when join on other servers
+        
         if after.channel is None:
             await asyncio.sleep(1)
             new_member = member.guild.get_member(self.user.id)
