@@ -12,4 +12,6 @@ RUN uv sync
 
 ENV IS_DOCKER=1
 
+ENV PYTHONUNBUFFERED=1
+
 CMD ["uv", "run", "main.py"]
