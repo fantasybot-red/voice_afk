@@ -36,6 +36,17 @@ class Client(discord.Client):
                 guild_id=self.channel.guild.id,
                 channel_id=self.channel.id,
             )
+            image_url = os.getenv("STREAM_IMAGE_URL")
+            if image_url:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(image_url) as response:
+                        if response.status == 200:
+                            image_data = await response.read()
+                            await self._connection.http.upload_stream_preview(
+                                str(skey), utils._bytes_to_base64_data(image_data)
+                            )
+                        else:
+                            print(f"[{self.user.name}] Failed to fetch image from {image_url}. Status code: {response.status}")
 
     async def on_ready(self):
         print(f'[{self.user.name}] Logged in as {self.user.name} ({self.user.id})')
