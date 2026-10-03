@@ -81,8 +81,6 @@ class Client(discord.Client):
             if new_member is not None and new_member.voice is not None and new_member.voice.channel is not None:
                 print(f"[{self.user.name}] Reconnected to voice channel.")
                 return
-            if before.channel.guild.voice_client is not None:
-                await before.channel.guild.voice_client.disconnect(force=True)
             print(f"[{self.user.name}] Disconnected from voice channel. Attempting to reconnect...")
             await self.connect_voice()
 
