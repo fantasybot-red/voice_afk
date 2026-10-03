@@ -4,14 +4,13 @@ import random
 from typing import Tuple, Sequence
 
 import aiohttp
-from discord.ext import tasks
 from dotenv import load_dotenv
 
 if os.getenv("IS_DOCKER") is None:
     load_dotenv()
 
 import discord
-from discord import utils, Stream, StreamDeleteReason, StreamKey, VoiceStream, VoiceCodec
+from discord import utils, StreamKey
 
 DETECTABLE_ACTIVITIES = None
 
@@ -20,20 +19,6 @@ class Client(discord.Client):
         self.channel_id = channel_id
         self.channel = None
         super().__init__()
-
-    @tasks.loop(minutes=25)
-    async def game_status(self):
-        random_activity = random.Random(os.urandom(16)).choice(DETECTABLE_ACTIVITIES)
-        await self.change_presence(activity=
-            discord.Activity(
-                type=discord.ActivityType.playing,
-                name=random_activity["name"],
-                application_id=random_activity["id"],
-                parent_application_id=random_activity["id"],
-                platform=discord.ActivityPlatform.desktop,
-            ),
-            edit_settings=False
-        )
 
     async def connect_voice(self):
         deaf = (os.getenv("IS_DEAF", "false").lower() == "true")
@@ -52,7 +37,6 @@ class Client(discord.Client):
                 channel_id=self.channel.id,
             )
 
-
     async def on_ready(self):
         print(f'[{self.user.name}] Logged in as {self.user.name} ({self.user.id})')
         print('------')
@@ -61,9 +45,6 @@ class Client(discord.Client):
             print(f'[{self.user.name}] Channel with ID {self.channel_id} not found.')
             return
         await self.connect_voice()
-        await self.game_status()
-        if not self.game_status.is_running():
-            self.game_status.start()
 
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         if member != self.user:
@@ -85,16 +66,7 @@ class Client(discord.Client):
             print(f"[{self.user.name}] Disconnected from voice channel. Attempting to reconnect...")
             await self.connect_voice()
 
-
-async def fetch_discoverable_activities():
-    async with aiohttp.ClientSession() as session:
-        async with session.get("https://discord.com/api/v10/games/detectable") as response:
-            return await response.json()
-
 async def main():
-    global DETECTABLE_ACTIVITIES
-    DETECTABLE_ACTIVITIES = await fetch_discoverable_activities()
-    print(f"Fetched {len(DETECTABLE_ACTIVITIES)} detectable activities.")
     utils.setup_logging()
     tasks = []
     tokens = os.environ
