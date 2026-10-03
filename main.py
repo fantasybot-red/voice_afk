@@ -45,6 +45,7 @@ class Client(discord.Client):
         )
         skey = StreamKey.from_guild(guild_id=self.channel.guild.id, channel_id=self.channel.id, owner_id=self.user.id)
         if stream:
+            await asyncio.sleep(2)
             await self._connection.ws.stream_create(
                 stream_type=skey.type.value,
                 guild_id=self.channel.guild.id,
