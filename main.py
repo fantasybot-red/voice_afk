@@ -15,47 +15,6 @@ from discord import utils, Stream, StreamDeleteReason, StreamKey, VoiceStream, V
 
 DETECTABLE_ACTIVITIES = None
 
-class StreamClient(discord.StreamProtocol):
-    voice_client: discord.VoiceClient
-
-    def supports_video(self) -> bool:
-        return True
-
-    def get_experiments(self, ready_experiments: Sequence[str]) -> Sequence[str]:
-        return ()
-
-    @property
-    def codecs(self) -> Tuple[VoiceCodec, ...]:
-        return (VoiceCodec.opus(),)
-
-    @property
-    def video_streams(self) -> Tuple[VoiceStream, ...]:
-        return (VoiceStream.video(),)
-
-    @property
-    def stream_key(self) -> StreamKey:
-        return self.stream.key
-
-
-    async def on_stream_server_update(self, data: dict, /) -> None:
-        pass
-
-
-    async def on_stream_delete(self, stream: Stream, reason: StreamDeleteReason, /) -> None:
-        if self.voice_client.is_connected() and reason not in [
-            StreamDeleteReason.unauthorized,
-            StreamDeleteReason.invalid_channel
-        ]:
-            await self.voice_client.create_stream(cls=StreamClient)
-
-
-    async def connect(self, *, timeout: float, reconnect: bool) -> None:
-        pass
-
-    async def disconnect(self, *, force: bool) -> None:
-        self.cleanup()
-
-
 class Client(discord.Client):
     def __init__(self, channel_id):
         self.channel_id = channel_id
@@ -64,7 +23,7 @@ class Client(discord.Client):
 
     @tasks.loop(minutes=25)
     async def game_status(self):
-        random_activity = random.choice(DETECTABLE_ACTIVITIES)
+        random_activity = random.Random(os.urandom(16)).choice(DETECTABLE_ACTIVITIES)
         await self.change_presence(activity=
             discord.Activity(
                 type=discord.ActivityType.playing,
@@ -72,16 +31,26 @@ class Client(discord.Client):
                 application_id=random_activity["id"],
                 parent_application_id=random_activity["id"],
                 platform=discord.ActivityPlatform.desktop,
-            )
+            ),
+            edit_settings=False
         )
 
     async def connect_voice(self):
         deaf = (os.getenv("IS_DEAF", "false").lower() == "true")
         mute = (os.getenv("IS_MUTE", "true").lower() == "true")
         stream = (os.getenv("IS_STREAM", "false").lower() == "true")
-        vc = await self.channel.connect(self_deaf=deaf, self_mute=mute, reconnect=False)
+        video = (os.getenv("IS_VIDEO", "false").lower() == "true")
+        await self.channel.guild.change_voice_state(
+            channel=self.channel, self_deaf=deaf, self_mute=mute, self_video=video
+        )
+        skey = StreamKey.from_guild(guild_id=self.channel.guild.id, channel_id=self.channel.id, owner_id=self.user.id)
         if stream:
-            await vc.create_stream(cls=StreamClient)
+            await self._connection.ws.stream_create(
+                stream_type=skey.type.value,
+                guild_id=self.channel.guild.id,
+                channel_id=self.channel.id,
+            )
+
 
     async def on_ready(self):
         print(f'[{self.user.name}] Logged in as {self.user.name} ({self.user.id})')
